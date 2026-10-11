@@ -14,7 +14,7 @@ Bojun Jin*, Jianzhu Bao*, Yang Sun, Yice Zhang, Ruifeng Xu†
 
 ArgGenBench evaluates whether large language models can generate persuasive arguments while following complex instructions that combine multiple argumentative requirements. It goes beyond topic and stance by jointly controlling length, style, argumentative strategy, target audience, and key points, with an optional input argument to support or refute.
 
-The benchmark contains **803 instances across 82 topics**, each pairing an instruction with a human-verified reference argument. The paper evaluates 15 LLMs under zero-shot, supervised fine-tuning (SFT), and direct preference optimization (DPO) settings. Even the strongest evaluated model achieves only **42.7% Overall win rate** against the references, illustrating the difficulty of satisfying these requirements together.
+The benchmark contains **803 instances across 82 topics**, each pairing an instruction with a human-verified reference argument. It supports research on controlled argument generation under zero-shot, supervised fine-tuning (SFT), and direct preference optimization (DPO) settings.
 
 This release provides the benchmark test set and its documentation.
 
@@ -43,8 +43,6 @@ Instructions combine the basic elements with 0–9 additional control signals: 0
 | --- | ---: |
 | Total instances | 803 |
 | Distinct topics | 82 |
-| Stage1: generation without an input argument | 384 |
-| Stage2: generation with an input argument | 419 |
 
 The paper reports an average of 4.2 additional control signals per instruction, with 88.4% of instructions integrating multiple signals. Average instruction and reference lengths in the paper are 48.6 and 235.2 words, respectively.
 
@@ -55,20 +53,21 @@ The benchmark is built through two phases:
 1. **Instruction creation.** Topics are curated from Kialo. Basic elements are combined with sampled control signals, synthesized into natural language instructions using GPT-4.1, and manually checked for clarity, specificity, feasibility, and natural phrasing.
 2. **Reference argument curation.** Claude-Sonnet-4, GPT-4.1, and Gemini-2.5-Pro generate candidate arguments with external knowledge from Kialo and web retrieval. Expert annotators select the strongest candidates based on instruction adherence and argument quality, then revise them where necessary. The paper reports manual revision of 41% of references.
 
-`Stage1` and `Stage2` identify the two construction rounds: Stage1 instances do not require an input argument; Stage2 instances include one in the instruction. These rounds are distinct from the instruction-creation and reference-curation phases above.
+`Stage1` and `Stage2` identify the two construction rounds: Stage1 instances do not require an input argument; Stage2 instances provide one in the `input_argument` field. These rounds are distinct from the instruction-creation and reference-curation phases above.
 
 ### Format
 
-[`data/test.json`](data/test.json) is a UTF-8 JSON array. Every record contains exactly four fields:
+[`data/test.json`](data/test.json) is a UTF-8 JSON array. Every record contains `id`, `topic`, `instruction`, and `reference_argument`. Stage2 records additionally contain `input_argument`:
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `id` | string | Unique identifier: `Stage1-1` through `Stage1-384`, or `Stage2-1` through `Stage2-419`. Numbering starts at 1 independently in each stage. |
+| `id` | string | Unique identifier in the form `Stage1-{n}` or `Stage2-{n}`. Numbering starts at 1 independently in each stage and is consecutive. |
 | `topic` | string | The debate topic. |
-| `instruction` | string | The complete generation request, including the input argument when applicable. |
+| `instruction` | string | The generation request and its argumentative requirements. |
+| `input_argument` | string | Present in Stage2 only: the full input argument to support or refute. |
 | `reference_argument` | string | The human-verified reference argument; named `output` in the internal data format. |
 
-The released data have undergone further refinement and optimization following the study. Original record order is retained, with consecutive identifiers assigned within each stage; the statistics and experimental results reported in the paper refer to the paper's evaluation version.
+The released data have undergone further refinement and optimization following the study. Original record order is retained, with consecutive identifiers assigned within each stage; the dataset statistics reported in the paper refer to the paper's evaluation version.
 
 ### Repository Structure
 
@@ -92,24 +91,26 @@ Load and inspect the dataset using Python's standard library:
 
 ```python
 import json
-from collections import Counter
 from pathlib import Path
 
 dataset = json.loads(Path("data/test.json").read_text(encoding="utf-8"))
 
 print(f"Instances: {len(dataset)}")
-print(Counter(sample["id"].split("-", 1)[0] for sample in dataset))
 
 sample = dataset[0]
 print(sample["id"])
 print(sample["instruction"])
 print(sample["reference_argument"])
 
-# Pass the complete instruction to your model as the generation request.
-messages = [{"role": "user", "content": sample["instruction"]}]
+# Include the full input argument if it is not already present in the instruction.
+prompt = sample["instruction"]
+input_argument = sample.get("input_argument")
+if input_argument and input_argument not in prompt:
+    prompt += "\n\nInput argument:\n" + input_argument
+messages = [{"role": "user", "content": prompt}]
 ```
 
-Use `instruction` as the model input and retain `reference_argument` for evaluation. In Stage2, the input argument is already embedded in the instruction. No additional Python packages are required to load the dataset.
+Use `instruction` as the generation request and retain `reference_argument` for evaluation. For Stage2, also provide the full `input_argument` if it is not already included in the instruction, as shown above. No additional Python packages are required to load the dataset.
 
 ## Evaluation
 
@@ -124,21 +125,6 @@ The paper evaluates models using five metrics:
 | Overall | Joint assessment of IF and Quality, subject to length adherence: failing LF yields an Overall loss. |
 
 GPT-4.1 serves as the main automatic judge. Each generated/reference pair is evaluated twice with the argument order reversed to reduce positional bias. The paper also reports evaluation with Gemini-2.5-Pro and human assessment on 100 sampled instances. Evaluation prompts and aggregation rules are provided in Appendix B.5 and Tables 25–26; the generation prompt appears in Table 27.
-
-### Selected Results from the Paper
-
-The following zero-shot results are from Table 1. Values are percentages; IF, Quality, and Overall columns show **win rates against the reference arguments**.
-
-| Model | LF | IF Win | Quality Win | Overall Win |
-| --- | ---: | ---: | ---: | ---: |
-| Claude-Sonnet-4 (thinking) | 86.2 | 28.5 | 46.5 | 42.7 |
-| Claude-Sonnet-3.7 (thinking) | 90.2 | 23.4 | 43.3 | 38.9 |
-| Qwen3-32B (thinking) | 52.8 | 33.6 | 61.5 | 28.3 |
-| GPT-4.1 | 91.3 | 14.3 | 21.2 | 19.7 |
-| Qwen3-14B (thinking) | 73.4 | 14.7 | 24.8 | 18.7 |
-| GPT-4o | 70.7 | 10.6 | 19.3 | 11.5 |
-
-Thinking models generally perform better in the zero-shot setting. SFT and DPO improve instruction following and argument quality for the evaluated smaller models, while length adherence remains important: DPO's gains on IF and Quality do not always translate into higher Overall scores. See the paper for complete results and analyses by difficulty and control dimension.
 
 ## Research Use
 
