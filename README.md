@@ -125,17 +125,29 @@ ArgGenBench is intended for academic research on controlled argument generation.
 ## Citation
 
 ```bibtex
-@inproceedings{jin-etal-2026-arggenbench,
-  title = "{A}rg{G}en{B}ench: Benchmarking the Complex Controlled Argument Generation Capability of Large Language Models",
-  author = "Jin, Bojun and Bao, Jianzhu and Sun, Yang and Zhang, Yice and Xu, Ruifeng",
-  booktitle = "Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
-  month = jul,
-  year = "2026",
-  address = "San Diego, California, United States",
-  publisher = "Association for Computational Linguistics",
-  pages = "30630--30662",
-  doi = "10.18653/v1/2026.acl-long.1414",
-  url = "https://aclanthology.org/2026.acl-long.1414/"
+@inproceedings{DBLP:conf/acl/JinBSZX26,
+  author       = {Bojun Jin and
+                  Jianzhu Bao and
+                  Yang Sun and
+                  Yice Zhang and
+                  Ruifeng Xu},
+  editor       = {Maria Liakata and
+                  Viviane P. Moreira and
+                  Jiajun Zhang and
+                  David Jurgens},
+  title        = {ArgGenBench: Benchmarking the Complex Controlled Argument Generation
+                  Capability of Large Language Models},
+  booktitle    = {Proceedings of the 64th Annual Meeting of the Association for Computational
+                  Linguistics (Volume 1: Long Papers), {ACL} 2026, San Diego, California,
+                  United States, July 2-7, 2026},
+  pages        = {30630--30662},
+  publisher    = {Association for Computational Linguistics},
+  year         = {2026},
+  url          = {https://doi.org/10.18653/v1/2026.acl-long.1414},
+  doi          = {10.18653/V1/2026.ACL-LONG.1414},
+  timestamp    = {Thu, 30 Jul 2026 17:33:27 +0200},
+  biburl       = {https://dblp.org/rec/conf/acl/JinBSZX26.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
 }
 ```
 
