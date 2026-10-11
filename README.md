@@ -2,10 +2,6 @@
 
 **ArgGenBench: Benchmarking the Complex Controlled Argument Generation Capability of Large Language Models**
 
-Bojun Jin*, Jianzhu Bao*, Yang Sun, Yice Zhang, Ruifeng Xu†
-
-*Equal contribution. †Corresponding author.
-
 **ACL 2026 · Long Paper**
 
 [Paper](https://aclanthology.org/2026.acl-long.1414/) · [PDF](https://aclanthology.org/2026.acl-long.1414.pdf) · [Dataset](data/test.json) · [Citation](#citation)
@@ -14,7 +10,7 @@ Bojun Jin*, Jianzhu Bao*, Yang Sun, Yice Zhang, Ruifeng Xu†
 
 ArgGenBench evaluates whether large language models can generate persuasive arguments while following complex instructions that combine multiple argumentative requirements. It goes beyond topic and stance by jointly controlling length, style, argumentative strategy, target audience, and key points, with an optional input argument to support or refute.
 
-The benchmark contains **803 instances across 82 topics**, each pairing an instruction with a human-verified reference argument. It supports research on controlled argument generation under zero-shot, supervised fine-tuning (SFT), and direct preference optimization (DPO) settings.
+The benchmark contains **803 instances across 82 topics**, each pairing an instruction with a human-verified reference argument.
 
 This release provides the benchmark test set and its documentation.
 
@@ -33,8 +29,6 @@ Given an `instruction`, a model should produce an argument that satisfies the re
 | Target audience | The intended audience to whom the argument should be tailored. |
 | Key points | Content that the argument should address. |
 
-Instructions combine the basic elements with 0–9 additional control signals: 0–2 styles, 0–3 strategies, 0–1 audience, and 0–3 key points. The paper groups instructions into easy (0–3 signals), medium (4–6), and hard (7–9) difficulty levels.
-
 ## Dataset
 
 ### Statistics
@@ -44,7 +38,7 @@ Instructions combine the basic elements with 0–9 additional control signals: 0
 | Total instances | 803 |
 | Distinct topics | 82 |
 
-The paper reports an average of 4.2 additional control signals per instruction, with 88.4% of instructions integrating multiple signals. Average instruction and reference lengths in the paper are 48.6 and 235.2 words, respectively.
+The paper reports an average of 4.2 additional control signals per instruction, with 88.4% of instructions integrating multiple signals.
 
 ### Construction
 
@@ -53,7 +47,7 @@ The benchmark is built through two phases:
 1. **Instruction creation.** Topics are curated from Kialo. Basic elements are combined with sampled control signals, synthesized into natural language instructions using GPT-4.1, and manually checked for clarity, specificity, feasibility, and natural phrasing.
 2. **Reference argument curation.** Claude-Sonnet-4, GPT-4.1, and Gemini-2.5-Pro generate candidate arguments with external knowledge from Kialo and web retrieval. Expert annotators select the strongest candidates based on instruction adherence and argument quality, then revise them where necessary. The paper reports manual revision of 41% of references.
 
-`Stage1` and `Stage2` identify the two construction rounds: Stage1 instances do not require an input argument; Stage2 instances provide one in the `input_argument` field. These rounds are distinct from the instruction-creation and reference-curation phases above.
+`Stage1` and `Stage2` identify the two construction rounds: Stage1 instances do not require an input argument; Stage2 instances provide one in the `input_argument` field to support or attack.
 
 ### Format
 
@@ -67,7 +61,7 @@ The benchmark is built through two phases:
 | `input_argument` | string | Present in Stage2 only: the full input argument to support or refute. |
 | `reference_argument` | string | The human-verified reference argument; named `output` in the internal data format. |
 
-The released data have undergone further refinement and optimization following the study. Original record order is retained, with consecutive identifiers assigned within each stage; the dataset statistics reported in the paper refer to the paper's evaluation version.
+The released data have undergone further refinement and optimization following the study.
 
 ### Repository Structure
 
@@ -110,7 +104,7 @@ if input_argument and input_argument not in prompt:
 messages = [{"role": "user", "content": prompt}]
 ```
 
-Use `instruction` as the generation request and retain `reference_argument` for evaluation. For Stage2, also provide the full `input_argument` if it is not already included in the instruction, as shown above. No additional Python packages are required to load the dataset.
+Use `instruction` as the generation request and retain `reference_argument` for evaluation. For Stage2, also provide the full `input_argument` if it is not already included in the instruction, as shown above.
 
 ## Evaluation
 
@@ -123,8 +117,6 @@ The paper evaluates models using five metrics:
 | Instruction Following (IF) | Win/tie/lose comparison against the reference on topic, stance, and the requested control signals. |
 | Argument Quality (Quality) | Win/tie/lose comparison on logical coherence, persuasiveness, clarity, and related qualities. |
 | Overall | Joint assessment of IF and Quality, subject to length adherence: failing LF yields an Overall loss. |
-
-GPT-4.1 serves as the main automatic judge. Each generated/reference pair is evaluated twice with the argument order reversed to reduce positional bias. The paper also reports evaluation with Gemini-2.5-Pro and human assessment on 100 sampled instances. Evaluation prompts and aggregation rules are provided in Appendix B.5 and Tables 25–26; the generation prompt appears in Table 27.
 
 ## Research Use
 
